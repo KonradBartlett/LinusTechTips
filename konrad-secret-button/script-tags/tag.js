@@ -12,7 +12,7 @@ secretButton.addEventListener('click', function () {
     };
     let guesses = getCookie('guesses');
     let guess = prompt(`You have ${guesses} guesses remaining`)
-    return fetch(`${process.env.HOST}/guess?guess=${guess}`, requestOptions).then(
+    return fetch(`https://2c6823307dc0.ngrok.io/guess?guess=${guess}`, requestOptions).then(
         result => {
             console.log(result);
             if (result.result == "low") {
