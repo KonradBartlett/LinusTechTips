@@ -14,14 +14,8 @@ let secret = getRandomInt();
 let active = false;
 let product = 0;
 
-var secretButton = document.querySelector('.secret')
-secretButton.addEventListener('click', function () {
-    console.log('open modal: ', this.dataset.product);
-    active = true;
-    product = this.dataset.product;
-});
 
-const SecretModal = () => {
+export const SecretModal = () => {
 
     console.log(secret);
 
