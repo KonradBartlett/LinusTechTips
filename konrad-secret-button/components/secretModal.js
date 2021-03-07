@@ -7,6 +7,8 @@ import { getOneTimeUrl } from "./server/handlers/mutations/get-one-time-url";
 import { getRandomInt } from "../utils/randomInt";
 import { global } from "../utils/global";
 
+console.log('i am here');
+
 // generate secret password between min and max
 let secret = getRandomInt();
 let active = false;
