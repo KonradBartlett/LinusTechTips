@@ -7,7 +7,7 @@ Checklist
 - ✅ If maximum guesses is exceeded reset session with new secret
 - ✅ When user guesses correctly create a draftorder granting 20% for the target product
 
-#### Backend
+#### Frontend requirements
 - ✅ Implement a "Use Secret Password" below "Add to Cart" button on product page
 - ✅ When button is pressed, create session, and display a prompt asking for input to solve the secret password
 - ✅ Display remaining guesses
