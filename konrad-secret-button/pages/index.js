@@ -1,8 +1,8 @@
 import { Button, Form, Modal, Page, TextField } from "@shopify/polaris";
 import { useCallback, useEffect, useState } from "react";
-import { global, setGlobal } from "../utils/global";
+import { getGlobal, global, setGlobal } from "../utils/global";
 
-// allow configurable min and max
+// allow configurable min and max through app page
 // generate secret password between min and max
 const Index = () => {
 
@@ -19,7 +19,7 @@ const Index = () => {
   }, [min, max])
 
   const handleSubmit = () => {
-    setGlobal(min, max, guesses)
+    setGlobal(min, max, guesses);
   }
 
   return (

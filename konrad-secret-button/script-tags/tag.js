@@ -1,9 +1,8 @@
-console.log('i am here!')
-
+// script tag on shopify store front
 var secretButton = document.querySelector('.secret');
+
+// handle secret button
 secretButton.addEventListener('click', function () {
-    console.log('open modal: ', this.dataset.product);
-    alert('woot woot');
     const requestOptions = {
         method: 'POST',
         headers: {
@@ -12,19 +11,20 @@ secretButton.addEventListener('click', function () {
     };
     let guesses = getCookie('guesses');
     let guess = prompt(`You have ${guesses} guesses remaining`)
-    return fetch(`https://b0ec99d96e21.ngrok.io/guess?guess=${guess}`, requestOptions).then(
+    // need to replace domain to your own tunnel / production address
+    return fetch(`https://34f3e057b086.ngrok.io/guess?guess=${guess}&variant=${this.dataset.product}`, requestOptions).then(
         result => {
-            console.log(result);
+            // alert user if high or low
             if (result.result == "low") {
                 alert('That guess was too low');
             } else if (result.result == "high") {
                 alert('That guess was too high');
             } else if (result.result == "correct") {
-                window.location = "http://www.google.com";
+                // redirect to draftOrder if correct
+                window.location = result.draftOrder;
             }
         }
     );
-
 });
 
 function getCookie(name) {

@@ -3,7 +3,7 @@ import ApolloClient from "apollo-boost";
 
 export const createClient = () => {
   return new ApolloClient({
-    uri: `https://konradbartlett-linustechtips-application.myshopify.com/api/2021-01/graphql.json`,
+    uri: `https://konradbartlett-linustechtips-application.myshopify.com/admin/api/2021-01/graphql.json`,
     fetchOptions: {
       credentials: "include"
     },

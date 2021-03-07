@@ -7,10 +7,12 @@ import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
+import cors from "@koa/cors";
 import { global } from "../utils/global";
 import { getRandomInt } from "../utils/randomInt";
 import { createClient } from "./handlers/client";
 import { getOneTimeUrl } from "./handlers/mutations/get-one-time-url";
+import { createDraftOrderUrl } from "./handlers/mutations/createDraftOrder";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -20,6 +22,7 @@ const app = next({
 });
 const handle = app.getRequestHandler();
 
+// shopify admin app context
 Shopify.Context.initialize({
   API_KEY: process.env.SHOPIFY_API_KEY,
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
@@ -27,18 +30,18 @@ Shopify.Context.initialize({
   HOST_NAME: process.env.HOST.replace(/https:\/\//, ""),
   API_VERSION: ApiVersion.October20,
   IS_EMBEDDED_APP: true,
-  // This should be replaced with your preferred storage strategy
   SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
 });
 
-// Storing the currently active shops in memory will force them to re-login when your server restarts. You should
-// persist this object in your app.
 const ACTIVE_SHOPIFY_SHOPS = {};
 
 app.prepare().then(async () => {
   const server = new Koa();
   const router = new Router();
   server.keys = [Shopify.Context.API_SECRET_KEY];
+
+  //////////////////////////////////////////////////
+  server.use(cors());
   server.use(
     createShopifyAuth({
       async afterAuth(ctx) {
@@ -46,7 +49,9 @@ app.prepare().then(async () => {
         const { shop, accessToken, scope } = ctx.state.shopify;
         ACTIVE_SHOPIFY_SHOPS[shop] = scope;
 
+        // access token for debugging using postman
         console.log('debug access token:', accessToken)
+
         const response = await Shopify.Webhooks.Registry.register({
           shop,
           accessToken,
@@ -74,6 +79,7 @@ app.prepare().then(async () => {
     ctx.res.statusCode = 200;
   };
 
+  // go to admin app
   router.get("/", async (ctx) => {
     const shop = ctx.query.shop;
 
@@ -95,53 +101,60 @@ app.prepare().then(async () => {
   });
 
   //////////////////////////////////////
-
-  router.post("/guess", async (ctx) => {
+  // Backend logic
+  //////////////////////////////////////
+  router.get("/guess", async (ctx) => {
     // if they have already solved 1 secret,
     // do not allow them to solve more, we can't give away too many discounts
     let solved = ctx.cookies.get('solved');
-    if (solved > 0)
+    if (Number.parseInt() > 0) {
+
+      ctx.body = {
+        result: 'correct',
+        draftOrder: draftOrder
+      }
       return;
+    }
 
     // get guess, and secret from request
     var url = require('url');
     var url_parts = url.parse(ctx.url, true);
     var query = url_parts.query;
     let guess = Number.parseInt(query.guess);
+    let variant = Number.parseInt(query.variant);
     let secret = ctx.cookies.get('secret');
 
     // check guess validity
     if (guess > secret) {
       // if guess is greater than secret return high
-      ctx.cookies.set('result', 'high')
       ctx.body = {
         result: 'high'
       }
     } else if (guess < secret) {
       // if guess is less than secret return low
-      ctx.cookies.set('result', 'low')
       ctx.body = {
         result: 'low'
       }
     } else if (guess == secret) {
-      ctx.cookies.set('result', 'correct')
+      ctx.cookies.set('solved', '1')
       // if guess is correct generate draft order
       const client = createClient();
-      getOneTimeUrl(client)
+      const draftOrder = createDraftOrderUrl(client, variant)
 
-      ctx.body = {
-        result: correct,
-        draftOrder: 'test'
-      }
       // - return draft order
+      ctx.body = {
+        result: 'correct',
+        draftOrder: draftOrder
+      }
     }
 
     let guesses = ctx.cookies.get('guesses');
-    // if session guesses is less than 0 destroy session
+    // if session guesses is less than 0 reset cookies
     if (guesses - 1 == 0) {
       // create and return a new session
       ctx.cookies.set('guesses', global().guesses);
       ctx.cookies.set('secret', getRandomInt());
+      ctx.cookies.set('solved', '0')
       ctx.cookies.set('draftURL', '');
       ctx.cookies.set('result', '');
     } else {

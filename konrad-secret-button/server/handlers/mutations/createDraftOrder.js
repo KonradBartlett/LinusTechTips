@@ -1,50 +1,45 @@
 import "isomorphic-fetch";
 import { gql } from "apollo-boost";
 
+// create draft order and return invoice url
 export function DRAFTORDER_CREATE() {
-
-  console.log('test')
   return gql`
     mutation draftOrderCreate($input: DraftOrderInput!) {
       draftOrderCreate(input: $input) {
         draftOrder {
           invoiceUrl
         }
-        userErrors {
-          field
-          message
-        }
       }
     }
   `;
 }
 
-export const createDraftOrderUrl = async (ctx) => {
+export const createDraftOrderUrl = async (ctx, variantId) => {
   const client = ctx;
-  console.log(client)
-  const confirmationUrl = await client
+  let confirmationUrl = '';
+  await client
     .mutate({
       mutation: DRAFTORDER_CREATE(),
       variables: {
         "input": {
+          // global discount for each item
           "appliedDiscount": {
             "valueType": "PERCENTAGE",
-            "value": 20
-            , "title": "Super Secret Discount"
+            "value": 20,
+            "title": "Super Secret Discount"
           },
+          // get variantId of product from request
           "lineItems": [
             {
-              "title": "test",
+              "variantId": `gid://shopify/ProductVariant/${variantId}`,
               "quantity": 1,
-              "originalUnitPrice": 10
             }
           ]
         }
       }
     })
     .then((response) => {
-      console.log(response);
-      response.data.draftOrderCreate.draftOrder.invoiceUrl
+      confirmationUrl = response.data.draftOrderCreate.draftOrder.invoiceUrl;
     });
-  return ctx.redirect(confirmationUrl);
+  return confirmationUrl;
 };
