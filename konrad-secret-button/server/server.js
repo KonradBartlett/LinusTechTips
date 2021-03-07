@@ -1,11 +1,16 @@
 import "@babel/polyfill";
 import dotenv from "dotenv";
+import { useParams } from 'react-router-dom';
 import "isomorphic-fetch";
 import createShopifyAuth, { verifyRequest } from "@shopify/koa-shopify-auth";
 import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
+import { global } from "../utils/global";
+import { getRandomInt } from "../utils/randomInt";
+import { createClient } from "./handlers/client";
+import { getOneTimeUrl } from "./handlers/mutations/get-one-time-url";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -88,6 +93,74 @@ app.prepare().then(async () => {
       console.log(`Failed to process webhook: ${error}`);
     }
   });
+
+  //////////////////////////////////////
+
+  router.post("/guess", async (ctx) => {
+    // if they have already solved 1 secret,
+    // do not allow them to solve more, we can't give away too many discounts
+    let solved = ctx.cookies.get('solved');
+    if (solved > 0)
+      return;
+
+    // get guess, and secret from request
+    var url = require('url');
+    var url_parts = url.parse(ctx.url, true);
+    var query = url_parts.query;
+    let guess = Number.parseInt(query.guess);
+    let secret = ctx.cookies.get('secret');
+
+    // check guess validity
+    if (guess > secret) {
+      // if guess is greater than secret return high
+      ctx.cookies.set('result', 'high')
+      ctx.body = {
+        result: 'high'
+      }
+    } else if (guess < secret) {
+      // if guess is less than secret return low
+      ctx.cookies.set('result', 'low')
+      ctx.body = {
+        result: 'low'
+      }
+    } else if (guess == secret) {
+      ctx.cookies.set('result', 'correct')
+      // if guess is correct generate draft order
+      const client = createClient();
+      getOneTimeUrl(client)
+
+      ctx.body = {
+        result: correct,
+        draftOrder: 'test'
+      }
+      // - return draft order
+    }
+
+    let guesses = ctx.cookies.get('guesses');
+    // if session guesses is less than 0 destroy session
+    if (guesses - 1 == 0) {
+      // create and return a new session
+      ctx.cookies.set('guesses', global().guesses);
+      ctx.cookies.set('secret', getRandomInt());
+      ctx.cookies.set('draftURL', '');
+      ctx.cookies.set('result', '');
+    } else {
+      // decrement session guesses count
+      ctx.cookies.set('guesses', guesses - 1);
+    }
+  });
+
+  router.get("/session", async (ctx) => {
+    // store default guess count in session
+    ctx.cookies.set('guesses', global().guesses);
+    // generate secret
+    ctx.cookies.set('secret', getRandomInt());
+    ctx.cookies.set('draftURL', '');
+    ctx.cookies.set('result', '');
+    ctx.cookies.set('solved', 0);
+  });
+
+  //////////////////////////////////////
 
   router.get("(/_next/static/.*)", handleRequest); // Static content is clear
   router.get("/_next/webpack-hmr", handleRequest); // Webpack content is clear

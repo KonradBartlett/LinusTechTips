@@ -13,13 +13,12 @@ export function ONETIME_CREATE() {
 
 export const getOneTimeUrl = async (ctx) => {
   const client = ctx;
-  console.log(client)
   const confirmationUrl = await client
     .query({
       query: ONETIME_CREATE(),
     })
-    .then((response) => console.log(response)).catch(error => console.log(error));
+    .then((response) => response).catch(error => console.log('error', error));
 
-  console.log('test')
+  console.log('ttttttttttttttt', confirmationUrl)
   //return ctx.redirect(confirmationUrl);
 };
