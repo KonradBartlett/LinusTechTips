@@ -107,11 +107,11 @@ app.prepare().then(async () => {
     // if they have already solved 1 secret,
     // do not allow them to solve more, we can't give away too many discounts
     let solved = ctx.cookies.get('solved');
-    if (Number.parseInt() > 0) {
+    if (Number.parseInt(solved) > 0) {
 
       ctx.body = {
-        result: 'correct',
-        draftOrder: draftOrder
+        result: "nope, no prize for you",
+        draftOrder: ''
       }
       return;
     }
@@ -164,13 +164,13 @@ app.prepare().then(async () => {
   });
 
   router.get("/session", async (ctx) => {
-    // store default guess count in session
+    // store default guess count in cookies
     ctx.cookies.set('guesses', global().guesses);
     // generate secret
     ctx.cookies.set('secret', getRandomInt());
+    ctx.cookies.set('solved', 0);
     ctx.cookies.set('draftURL', '');
     ctx.cookies.set('result', '');
-    ctx.cookies.set('solved', 0);
   });
 
   //////////////////////////////////////
