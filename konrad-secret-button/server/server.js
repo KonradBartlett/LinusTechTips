@@ -103,7 +103,7 @@ app.prepare().then(async () => {
   //////////////////////////////////////
   // Backend logic
   //////////////////////////////////////
-  router.get("/guess", async (ctx) => {
+  router.post("/guess", async (ctx) => {
     // if they have already solved 1 secret,
     // do not allow them to solve more, we can't give away too many discounts
     let solved = ctx.cookies.get('solved');

