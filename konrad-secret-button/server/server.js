@@ -11,7 +11,6 @@ import cors from "@koa/cors";
 import { global } from "../utils/global";
 import { getRandomInt } from "../utils/randomInt";
 import { createClient } from "./handlers/client";
-import { getOneTimeUrl } from "./handlers/mutations/get-one-time-url";
 import { createDraftOrderUrl } from "./handlers/mutations/createDraftOrder";
 
 dotenv.config();
